@@ -1,3 +1,13 @@
+📌 Sobre o Projeto
+Este projeto foi desenvolvido durante a NLW Agents da Rocketseat e consiste em uma IA chamada ESports, que utiliza a avançada tecnologia Gemini para responder perguntas sobre os jogos mais populares do cenário competitivo: League of Legends, Valorant e CS:GO.
+
+Construída com HTML, CSS e JavaScript, a aplicação segue boas práticas de desenvolvimento, incluindo componentização e responsividade, além de integrar o Gemini para entregar respostas inteligentes e dinâmicas, focadas no universo dos eSports.
+
+Esse projeto é ideal para quem está começando e quer explorar o poder da Inteligência Artificial aplicada a games, criando experiências interativas e inovadoras.
+
+# Acesso a IA
+- AIzaSyAWftsvLLXbk1DvspSXbCHysS_4HHauFYM
+
 # HTML
 - HypertText
     - Textos puros, livros, revistas, jornais;
