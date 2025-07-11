@@ -5,8 +5,13 @@ Construída com HTML, CSS e JavaScript, a aplicação segue boas práticas de de
 
 Esse projeto é ideal para quem está começando e quer explorar o poder da Inteligência Artificial aplicada a games, criando experiências interativas e inovadoras.
 
-# Acesso a IA
+# Link Site
+- https://biancaordine.github.io/NLW20---Iniciante/
+- 
+# Acesso a API KEY
 - AIzaSyAWftsvLLXbk1DvspSXbCHysS_4HHauFYM
+
+# Abaixo está o conteúdo passado em aula.
 
 # HTML
 - HypertText
