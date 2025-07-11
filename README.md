@@ -7,7 +7,7 @@ Esse projeto é ideal para quem está começando e quer explorar o poder da Inte
 
 # Link Site
 - https://biancaordine.github.io/NLW20---Iniciante/
-- 
+  
 # Acesso a API KEY
 - AIzaSyAWftsvLLXbk1DvspSXbCHysS_4HHauFYM
 
