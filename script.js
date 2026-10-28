@@ -86,7 +86,8 @@ Dê dicas sobre mira, mapas, táticas de time, economia e posições.
 
 Pergunta: ${question}
 `
-
+console.log('Jogo recebido:', JSON.stringify(game))
+    
     let pergunta = ''
 
 if (game === 'lol') {
