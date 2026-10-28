@@ -1,3 +1,4 @@
+
 const apiKeyInput = document.getElementById('apiKey')
 const gameSelect = document.getElementById('gameSelect')
 const questionInput = document.getElementById('questionInput')
@@ -11,106 +12,80 @@ const markdownToHTML = (text) => {
 }
 
 const perguntarAI = async (question, game, apiKey) => {
-    const model = "gemini-3.8-flash"
-    const geminiURL = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`
+    const model = 'gemini-3.8-flash'
+    const geminiURL =
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`
 
-    const perguntaLOL = `
+    const dataHoje = new Date().toLocaleDateString('pt-BR')
+
+    const prompts = {
+        lol: `
 ## Especialidade
-Você é um especialista assistente de meta para o jogo League of Legends.
+Você é um assistente especialista em League of Legends.
 
 ## Tarefa
-Você deve responder as perguntas do usuário com base no seu conhecimento sobre o jogo, estratégias, builds e dicas.
+Responda sobre estratégias, builds, campeões, runas e dicas de jogo.
 
 ## Regras
-- Se não souber, responda "Não sei".
-- Se não for relacionado ao jogo, diga "Essa pergunta não está relacionada ao jogo".
-- Use a data de hoje: ${new Date().toLocaleDateString()}
-- Use informações atualizadas do patch atual.
-- Nunca invente conteúdo.
+- Se não souber, diga "Não sei".
+- Se a pergunta não for sobre League of Legends, diga "Essa pergunta não está relacionada ao jogo".
+- Data de hoje: ${dataHoje}.
+- Não invente informações nem afirme que verificou o patch atual se não tiver essa informação.
 
 ## Resposta
-- Seja direto. Máximo 200 caracteres.
-- Use markdown.
-- Sem saudações ou despedidas.
-
-## Exemplo de resposta
-**Itens:** [Exemplo de build atual]\n**Runas:** [Runas sugeridas]
+- Seja direto, com no máximo 200 caracteres.
+- Use Markdown.
+- Não use saudações nem despedidas.
 
 Pergunta: ${question}
-`
-
-    const perguntaValorant = `
+`,
+        valorant: `
 ## Especialidade
-Você é um especialista tático e estratégico em Valorant.
+Você é um assistente tático e estratégico de Valorant.
 
 ## Tarefa
 Responda sobre agentes, estratégias, mapas, economia e dicas de jogo.
 
 ## Regras
 - Se não souber, diga "Não sei".
-- Se não for sobre Valorant, diga "Essa pergunta não está relacionada ao jogo".
-- Data: ${new Date().toLocaleDateString()}
-- Use conhecimento do patch atual.
+- Se a pergunta não for sobre Valorant, diga "Essa pergunta não está relacionada ao jogo".
+- Data de hoje: ${dataHoje}.
+- Não invente informações nem afirme que verificou o patch atual se não tiver essa informação.
 
 ## Resposta
-- Direto, até 200 caracteres.
-- Em markdown.
-- Sem saudações.
-
-## Exemplo de resposta
-**Melhor agente para Fracture:** Use Breach por causa do controle em áreas apertadas.\n**Dica:** Priorize controle de ultimates por orbes.
+- Seja direto, com no máximo 200 caracteres.
+- Use Markdown.
+- Não use saudações nem despedidas.
 
 Pergunta: ${question}
-`
-
-    const perguntaCS = `
+`,
+        cs: `
 ## Especialidade
-Você é um analista estratégico de CS: GO.
+Você é um assistente estratégico de Counter-Strike.
 
 ## Tarefa
-Dê dicas sobre mira, mapas, táticas de time, economia e posições.
+Responda sobre mira, mapas, táticas de equipe, economia e posicionamento.
 
 ## Regras
 - Se não souber, diga "Não sei".
-- Se não for sobre CS:GO, diga "Essa pergunta não está relacionada ao jogo".
-- Data: ${new Date().toLocaleDateString()}
-- Use conhecimento da meta atual.
+- Se a pergunta não for sobre Counter-Strike, diga "Essa pergunta não está relacionada ao jogo".
+- Data de hoje: ${dataHoje}.
+- Não invente informações nem afirme que verificou a meta atual se não tiver essa informação.
 
 ## Resposta
-- Máx. 200 caracteres.
-- Use markdown.
-- Sem saudações.
-
-## Exemplo de resposta
-**Dica de economia:** Após perder pistol, compre pistolas e utilitários no round 2 para "force buy".\n**Mapa:** Em Mirage, jogue passivo no CT inicial.
+- Seja direto, com no máximo 200 caracteres.
+- Use Markdown.
+- Não use saudações nem despedidas.
 
 Pergunta: ${question}
 `
+    }
 
-    let pergunta = ''
+    const pergunta = prompts[game]
 
-if (game === 'lol') {
-    pergunta = perguntaLOL
-} else if (game === 'valorant') {
-    pergunta = perguntaValorant
-} else if (game === 'cs') {
-    pergunta = perguntaCS
-} else {
-    throw new Error('Jogo não reconhecido')
-}
-
-    const contents = [{
-        role: "user",
-        parts: [{
-            text: pergunta
-        }]
-    }]
-
-    const tools = [
-        {
-            google_search: {} // Mantido para todos os jogos
-        }
-    ]
+    if (!pergunta) {
+        throw new Error('Jogo não reconhecido. Selecione um jogo da lista.')
+    }
 
     const response = await fetch(geminiURL, {
         method: 'POST',
@@ -118,23 +93,66 @@ if (game === 'lol') {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            contents,
-            tools
+            contents: [
+                {
+                    role: 'user',
+                    parts: [{ text: pergunta }]
+                }
+            ],
+            tools: [
+                {
+                    google_search: {}
+                }
+            ]
         })
     })
 
-    const data = await response.json()
-    return data.candidates[0].content.parts[0].text
+    let data
+
+    try {
+        data = await response.json()
+    } catch {
+        throw new Error('O Google retornou uma resposta inválida. Tente novamente.')
+    }
+
+    if (!response.ok) {
+        const mensagem =
+            data?.error?.message ||
+            `A API retornou o erro HTTP ${response.status}.`
+
+        throw new Error(mensagem)
+    }
+
+    const texto = data?.candidates?.[0]?.content?.parts
+        ?.map(part => part.text || '')
+        .join('')
+        .trim()
+
+    if (!texto) {
+        const motivo = data?.promptFeedback?.blockReason
+
+        if (motivo) {
+            throw new Error(`A pergunta foi bloqueada pela API. Motivo: ${motivo}`)
+        }
+
+        throw new Error(
+            'A API não retornou uma resposta em texto. Tente reformular a pergunta.'
+        )
+    }
+
+    return texto
 }
 
 const enviarFormulario = async (event) => {
     event.preventDefault()
-    const apiKey = apiKeyInput.value
-    const game = gameSelect.value
-    const question = questionInput.value
 
-    if (apiKey === '' || game === '' || question === '') {
-        alert('Por favor, preencha todos os campos')
+    const apiKey = apiKeyInput.value.trim()
+    const game = gameSelect.value
+    const question = questionInput.value.trim()
+    const responseContent = aiResponse.querySelector('.response-content')
+
+    if (!apiKey || !game || !question) {
+        alert('Por favor, preencha todos os campos.')
         return
     }
 
@@ -142,15 +160,22 @@ const enviarFormulario = async (event) => {
     askButton.textContent = 'Perguntando...'
     askButton.classList.add('loading')
 
+    aiResponse.classList.remove('hidden')
+    responseContent.textContent = 'Consultando a IA...'
+
     try {
         const text = await perguntarAI(question, game, apiKey)
-        aiResponse.querySelector('.response-content').innerHTML = markdownToHTML(text)
-        aiResponse.classList.remove('hidden')
+
+        responseContent.innerHTML = markdownToHTML(text)
     } catch (error) {
-        console.log('Erro: ', error)
+        console.error('Erro ao consultar a API Gemini:', error)
+
+        // Exibe a mensagem sem interpretar o erro como HTML.
+        responseContent.textContent =
+            `Não foi possível obter uma resposta: ${error.message}`
     } finally {
         askButton.disabled = false
-        askButton.textContent = "Perguntar"
+        askButton.textContent = 'Perguntar'
         askButton.classList.remove('loading')
     }
 }
