@@ -12,6 +12,7 @@ const markdownToHTML = (text) => {
 
 const perguntarAI = async (question, game, apiKey) => {
     const model = 'gemini-3.6-flash'
+
     const geminiURL =
         `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`
 
@@ -86,35 +87,64 @@ Pergunta: ${question}
         throw new Error('Jogo não reconhecido. Selecione um jogo da lista.')
     }
 
-    const response = await fetch(geminiURL, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            contents: [
-                {
-                    role: 'user',
-                    parts: [{ text: pergunta }]
-                }
-            ]
+    let response
+
+    try {
+        response = await fetch(geminiURL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            signal: AbortSignal.timeout(30000),
+            body: JSON.stringify({
+                contents: [
+                    {
+                        role: 'user',
+                        parts: [{ text: pergunta }]
+                    }
+                ]
+            })
         })
-    })
+    } catch (error) {
+        if (
+            error.name === 'TimeoutError' ||
+            error.name === 'AbortError'
+        ) {
+            throw new Error(
+                'A IA demorou mais de 30 segundos para responder. Tente novamente.'
+            )
+        }
+
+        throw new Error(
+            'Não foi possível conectar à API. Verifique sua conexão e tente novamente.'
+        )
+    }
 
     let data
 
     try {
         data = await response.json()
     } catch {
-        throw new Error('O Google retornou uma resposta inválida. Tente novamente.')
+        throw new Error(
+            'O Google retornou uma resposta inválida. Tente novamente.'
+        )
     }
 
     if (!response.ok) {
-        const mensagem =
-            data?.error?.message ||
-            `A API retornou o erro HTTP ${response.status}.`
+        const mensagens = {
+            400: 'A solicitação foi rejeitada. Confira a pergunta e tente novamente.',
+            403: 'A API recusou o acesso. Verifique a chave e as permissões do projeto.',
+            404: 'O modelo solicitado não foi encontrado ou não está disponível.',
+            429: 'A cota ou o limite de uso da API foi excedido. Confira os limites no Google AI Studio.',
+            500: 'O serviço da IA apresentou um erro interno. Tente novamente.',
+            503: 'O modelo está temporariamente indisponível ou sobrecarregado. Tente novamente mais tarde.'
+        }
 
-        throw new Error(mensagem)
+        throw new Error(
+            mensagens[response.status] ||
+            data?.error?.message ||
+            `Erro da API (HTTP ${response.status}).`
+        )
     }
 
     const texto = data?.candidates?.[0]?.content?.parts
@@ -126,11 +156,13 @@ Pergunta: ${question}
         const motivo = data?.promptFeedback?.blockReason
 
         if (motivo) {
-            throw new Error(`A pergunta foi bloqueada pela API. Motivo: ${motivo}`)
+            throw new Error(
+                `A pergunta foi bloqueada pela API. Motivo: ${motivo}`
+            )
         }
 
         throw new Error(
-            'A API não retornou uma resposta em texto. Tente reformular a pergunta.'
+            'A IA não retornou texto. Tente reformular sua pergunta.'
         )
     }
 
@@ -143,7 +175,8 @@ const enviarFormulario = async (event) => {
     const apiKey = apiKeyInput.value.trim()
     const game = gameSelect.value
     const question = questionInput.value.trim()
-    const responseContent = aiResponse.querySelector('.response-content')
+    const responseContent =
+        aiResponse.querySelector('.response-content')
 
     if (!apiKey || !game || !question) {
         alert('Por favor, preencha todos os campos.')
@@ -164,7 +197,6 @@ const enviarFormulario = async (event) => {
     } catch (error) {
         console.error('Erro ao consultar a API Gemini:', error)
 
-        // Exibe a mensagem sem interpretar o erro como HTML.
         responseContent.textContent =
             `Não foi possível obter uma resposta: ${error.message}`
     } finally {
