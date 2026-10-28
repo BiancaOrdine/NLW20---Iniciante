@@ -11,7 +11,7 @@ const markdownToHTML = (text) => {
 }
 
 const perguntarAI = async (question, game, apiKey) => {
-    const model = "gemini-2.0-flash"
+    const model = "gemini-3.8-flash"
     const geminiURL = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`
 
     const perguntaLOL = `
@@ -86,8 +86,7 @@ Dê dicas sobre mira, mapas, táticas de time, economia e posições.
 
 Pergunta: ${question}
 `
-console.log('Jogo recebido:', JSON.stringify(game))
-    
+
     let pergunta = ''
 
 if (game === 'lol') {
