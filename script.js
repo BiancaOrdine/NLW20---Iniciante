@@ -89,15 +89,15 @@ Pergunta: ${question}
 
     let pergunta = ''
 
-    if (game === 'LOL') {
-        pergunta = perguntaLOL
-    } else if (game === 'Valorant') {
-        pergunta = perguntaValorant
-    } else if (game === 'CS:GO') {
-        pergunta = perguntaCS
-    } else {
-        throw new Error('Jogo não reconhecido')
-    }
+if (game === 'lol') {
+    pergunta = perguntaLOL
+} else if (game === 'valorant') {
+    pergunta = perguntaValorant
+} else if (game === 'cs') {
+    pergunta = perguntaCS
+} else {
+    throw new Error('Jogo não reconhecido')
+}
 
     const contents = [{
         role: "user",
